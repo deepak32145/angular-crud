@@ -1,7 +1,11 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { EmployeeService } from '../services/employee.service';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import {
+  MatDialog,
+  MatDialogRef,
+  MAT_DIALOG_DATA,
+} from '@angular/material/dialog';
 
 @Component({
   selector: 'app-emp-add-edit',
@@ -20,7 +24,8 @@ export class EmpAddEditComponent implements OnInit {
   constructor(
     private _fb: FormBuilder,
     private _empService: EmployeeService,
-    private _dialogRef: MatDialogRef<EmpAddEditComponent>
+    private _dialogRef: MatDialogRef<EmpAddEditComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     this.empForm = this._fb.group({
       firstName: '',
@@ -34,18 +39,34 @@ export class EmpAddEditComponent implements OnInit {
       package: '',
     });
   }
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.empForm.patchValue(this.data);
+  }
   onFormSubmit() {
     if (this.empForm.valid) {
-      this._empService.addEmployee(this.empForm.value).subscribe({
-        next: (val: any) => {
-          alert('Employee added successfully');
-          this._dialogRef.close(true);
-        },
-        error: (err: any) => {
-          console.error(err);
-        },
-      });
+      if (this.data) {
+        this._empService
+          .updateEmloyee(this.data.id, this.empForm.value)
+          .subscribe({
+            next: (val: any) => {
+              this._dialogRef.close(true);
+              alert('employee detail updated');
+            },
+            error: (err) => {
+              console.log(err);
+            },
+          });
+      } else {
+        this._empService.addEmployee(this.empForm.value).subscribe({
+          next: (val: any) => {
+            this._dialogRef.close(true);
+            alert('Employee added successfully');
+          },
+          error: (err: any) => {
+            console.error(err);
+          },
+        });
+      }
     }
   }
 }
